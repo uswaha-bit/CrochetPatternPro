@@ -1,107 +1,199 @@
-import styled from 'styled-components';
-import { useDispatch, useSelector } from 'react-redux';
-import { SetActiveTab, ToggleMenu } from './learnSlice';
+import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux";
+import { SetActiveTab, ToggleMenu } from "./learnSlice";
+import { colors, HEADER_HEIGHT } from "../../ui/theme";
 
-import BookOpenIcon from '../../assets/book-open.png';
-import AskAIIcon from '../../assets/ask-ai.png';
-import UsingEditorIcon from '../../assets/using-editor.png';
-import PencilIcon from '../../assets/pencil.png';
-import MenuIcon from '../../assets/menu-icon.png';
+import BookOpenIcon from "../../assets/book-open.png";
+import AskAIIcon from "../../assets/ask-ai.png";
+import UsingEditorIcon from "../../assets/using-editor.png";
+import PencilIcon from "../../assets/pencil.png";
+import MenuIcon from "../../assets/menu-icon.png";
 
-const SidebarContainer = styled.div`
+const TABS = [
+  { id: "crochet-basics", label: "Crochet basics", icon: PencilIcon },
+  { id: "using-editor", label: "Using the editor", icon: UsingEditorIcon },
+  { id: "other-resources", label: "Other resources", icon: BookOpenIcon },
+  { id: "ask-ai", label: "Ask AI", icon: AskAIIcon },
+];
+
+const Aside = styled.aside`
+  position: sticky;
+  top: ${HEADER_HEIGHT};
+  align-self: flex-start;
+  flex: none;
+  box-sizing: border-box;
+  width: ${({ $open }) => ($open ? "290px" : "88px")};
+  min-height: calc(100vh - ${HEADER_HEIGHT});
+  padding: 28px 16px;
+  border-right: 2px dashed ${colors.stitchLine};
+  transition: width 0.2s ease;
+
+  @media (max-width: 800px) {
+    position: static;
+    width: 100%;
+    min-height: 0;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 2px dashed ${colors.stitchLine};
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+const Toggle = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: ${({ $open }) => ($open ? "flex-start" : "center")};
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 800px) {
+    display: none;
+  }
+`;
+
+const Title = styled.span`
+  display: ${({ $open }) => ($open ? "block" : "none")};
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+`;
+
+const Icon = styled.img`
+  flex: none;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+`;
+
+const List = styled.ul`
   display: flex;
   flex-direction: column;
-  background-color: var(--primary-color);
-  padding: 10px;
-  align-items: center;
-  border-radius: 10px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: 800px) {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 6px; /* room for the active tab's shadow */
+  }
 `;
 
-const TitleContainer = styled.div`
-  display: flex;
-  cursor: pointer;
-  margin-top: 10px;
-`;
-
-const Title = styled.div`
-  font-size: 26px;
-  text-transform: capitalize;
-  text-align: center;
-  padding: 10px;
-`;
-
-const MenuContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-inline: ${({ $openMenu }) => ($openMenu ? '30px' : '10px')};
-  margin-top: 20px;
-  gap: 10px;
-`;
-
-const Menu = styled.div`
+const TabButton = styled.button`
+  position: relative;
   display: flex;
   align-items: center;
-  border: 1px solid ${({ $active }) => ($active ? 'green' : 'black')};
-  background-color: ${({ $active }) => ($active ? 'var(--secondary-color)' : 'transparent')};
-  padding: 20px;
-  gap: 10px;
+  justify-content: ${({ $open }) => ($open ? "flex-start" : "center")};
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: ${({ $active }) => ($active ? colors.yarn : "transparent")};
+  box-shadow: ${({ $active }) => ($active ? `0 4px 0 ${colors.ink}` : "none")};
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  text-align: left;
   cursor: pointer;
-  border-radius: 8px;
-  transition: background-color 0.3s;
+
+  /* dashed seam on the active tab, like the patch button */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 2px dashed rgba(22, 48, 32, 0.5);
+    border-radius: 8px;
+    opacity: ${({ $active }) => ($active ? 1 : 0)};
+    pointer-events: none;
+  }
+
+  &:hover span {
+    text-decoration: underline wavy ${({ $active }) => ($active ? colors.ink : colors.yarn)};
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 800px) {
+    justify-content: flex-start;
+    width: auto;
+    white-space: nowrap;
+  }
 `;
 
-const MenuText = styled.div`
-  text-transform: capitalize;
-  padding-inline: 20px;
-  display: ${({ $openMenu }) => ($openMenu ? 'block' : 'none')};
-`;
+const Label = styled.span`
+  display: ${({ $open }) => ($open ? "block" : "none")};
 
-const Icon = styled.img``;
+  @media (max-width: 800px) {
+    display: block;
+  }
+`;
 
 export default function Sidebar() {
   const dispatch = useDispatch();
   const { activeTab, openMenu } = useSelector((state) => state.learn);
 
-  const handleToggleMenu = () => {
-    dispatch(ToggleMenu());
-  };
-
-  const handleTabClick = (tab) => {
-    dispatch(SetActiveTab(tab));
-  };
-
   return (
-    <SidebarContainer>
-      <TitleContainer onClick={handleToggleMenu}>
-        {openMenu ? (
-          <Title>skill development</Title>
-        ) : (
-          <Icon src={MenuIcon} width={50} />
-        )}
-      </TitleContainer>
+    <Aside $open={openMenu}>
+      <Toggle
+        type="button"
+        $open={openMenu}
+        onClick={() => dispatch(ToggleMenu())}
+        aria-expanded={openMenu}
+        aria-label={openMenu ? "Collapse menu" : "Expand menu"}
+      >
+        <Icon src={MenuIcon} alt="" />
+        <Title $open={openMenu}>Skill development</Title>
+      </Toggle>
 
-      <MenuContainer $openMenu={openMenu}>
-        <Menu onClick={() => handleTabClick('crochet-basics')} $active={activeTab === 'crochet-basics'}>
-          <Icon src={PencilIcon} width={18} alt='crochet basics icon' />
-          <MenuText $openMenu={openMenu}>crochet basics</MenuText>
-        </Menu>
-
-        <Menu onClick={() => handleTabClick('using-editor')} $active={activeTab === 'using-editor'}>
-          <Icon src={UsingEditorIcon} width={18} alt='using editor icon' />
-          <MenuText $openMenu={openMenu}>using editor</MenuText>
-        </Menu>
-
-        <Menu onClick={() => handleTabClick('other-resources')} $active={activeTab === 'other-resources'}>
-          <Icon src={BookOpenIcon} width={18} alt='other resources icon' />
-          <MenuText $openMenu={openMenu}>other resources</MenuText>
-        </Menu>
-
-        <Menu onClick={() => handleTabClick('ask-ai')} $active={activeTab === 'ask-ai'}>
-          <Icon src={AskAIIcon} width={20} alt='ask AI icon' />
-          <MenuText $openMenu={openMenu}>ask AI</MenuText>
-        </Menu>
-      </MenuContainer>
-    </SidebarContainer>
+      <nav aria-label="Learn topics">
+        <List>
+          {TABS.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <li key={tab.id}>
+                <TabButton
+                  type="button"
+                  $active={active}
+                  $open={openMenu}
+                  aria-current={active ? "true" : undefined}
+                  aria-label={tab.label}
+                  title={tab.label}
+                  onClick={() => dispatch(SetActiveTab(tab.id))}
+                >
+                  <Icon src={tab.icon} alt="" />
+                  <Label $open={openMenu}>{tab.label}</Label>
+                </TabButton>
+              </li>
+            );
+          })}
+        </List>
+      </nav>
+    </Aside>
   );
 }

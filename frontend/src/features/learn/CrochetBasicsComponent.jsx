@@ -1,6 +1,7 @@
 import styled from "styled-components";
+import { Heading, Lede } from "./shared";
+import { colors } from "../../ui/theme";
 
-// ✅ Import icons properly — adjust paths if needed
 import ch from "../../assets/chain.svg";
 import sl from "../../assets/slip.svg";
 import sc from "../../assets/singleCrochet.svg";
@@ -10,7 +11,6 @@ import tr from "../../assets/treble.svg";
 import mr from "../../assets/magicRing.svg";
 
 const stitches = [
-    
   {
     name: "Magic Ring",
     abbrev: "mr",
@@ -62,108 +62,97 @@ const stitches = [
   },
 ];
 
-// Styled Components
-const Container = styled.div`
-  padding: 2rem;
-  background-color: #f9fafb;
-  min-height: 100vh;
-  overflow-y: auto;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+const List = styled.ul`
+  margin: 0;
+  padding: 0;
+  list-style: none;
 `;
 
-const Heading = styled.h1`
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  text-align: center;
-  margin-bottom: 2.5rem;
-`;
-
-const Grid = styled.div`
+const Row = styled.li`
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-`;
-
-const Card = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  }
-`;
-
-const CardHeader = styled.div`
-  display: flex;
+  grid-template-columns: 72px minmax(0, 3fr) minmax(0, 5fr);
+  gap: 12px 32px;
   align-items: center;
-  margin-bottom: 1rem;
+  padding: 24px 0;
+  border-top: 2px dashed ${colors.stitchLine};
+
+  &:last-child {
+    border-bottom: 2px dashed ${colors.stitchLine};
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 72px minmax(0, 1fr);
+
+    p {
+      grid-column: 1 / -1;
+    }
+  }
 `;
 
-const Icon = styled.img`
-  width: 48px;
-  height: 48px;
-  margin-right: 1rem;
+const SymbolBox = styled.div`
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  box-sizing: border-box;
+  border: 2px solid ${colors.ink};
+  border-radius: 10px;
+  background-color: ${colors.surface};
+  background-image: linear-gradient(${colors.grid} 1px, transparent 1px),
+    linear-gradient(90deg, ${colors.grid} 1px, transparent 1px);
+  background-size: 12px 12px;
+
+  img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+  }
 `;
 
-const Info = styled.div``;
-
-const Name = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1a202c;
-  margin-bottom: 0.25rem;
+const Name = styled.h2`
+  margin: 0 0 8px;
+  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 `;
 
 const Abbrev = styled.span`
-  font-size: 0.85rem;
-  background-color: #edf2f7;
-  color: #4a5568;
-  padding: 0.3rem 0.6rem;
+  display: inline-block;
+  padding: 2px 10px;
   border-radius: 8px;
-  font-weight: 500;
+  background: ${colors.ink};
+  color: ${colors.paper};
+  font-size: 0.9rem;
+  font-weight: 700;
 `;
 
 const Description = styled.p`
-  font-size: 0.95rem;
-  color: #4a5568;
-  line-height: 1.6;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: ${colors.muted};
 `;
 
 export default function CrochetBasicsComponent() {
   return (
-    <Container>
-      <Heading>Crochet Basics</Heading>
-      <Grid>
-        {stitches.map((stitch, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <Icon src={stitch.icon} alt={`${stitch.name} icon`} />
-              <Info>
-                <Name>{stitch.name}</Name>
-                <Abbrev>{stitch.abbrev}</Abbrev>
-              </Info>
-            </CardHeader>
+    <>
+      <Heading>Crochet basics</Heading>
+      <Lede>The stitches you’ll meet in almost every pattern and chart.</Lede>
+      <List>
+        {stitches.map((stitch) => (
+          <Row key={stitch.abbrev}>
+            <SymbolBox>
+              <img src={stitch.icon} alt={`${stitch.name} chart symbol`} />
+            </SymbolBox>
+            <div>
+              <Name>{stitch.name}</Name>
+              <Abbrev>{stitch.abbrev}</Abbrev>
+            </div>
             <Description>{stitch.description}</Description>
-          </Card>
+          </Row>
         ))}
-      </Grid>
-    </Container>
+      </List>
+    </>
   );
 }

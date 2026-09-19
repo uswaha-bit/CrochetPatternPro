@@ -1,47 +1,54 @@
-import React from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router";
-import Header from "../../ui/Header";
 import styled from "styled-components";
+import Header from "../../ui/Header";
 import Sidebar from "./Sidebar";
 import MainContent from "./MainContent";
-const Container = styled.div`
+import { colors, fontStack } from "../../ui/theme";
+
+const Page = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
+  background: ${colors.paper};
+  color: ${colors.ink};
+  font-family: ${fontStack};
 `;
-const BodyContainer = styled.div`
+
+const Body = styled.div`
   display: flex;
-  width: 100%;
-  padding: 10px;
   flex: 1;
-  gap: 10px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+
+  @media (max-width: 800px) {
+    flex-direction: column;
+  }
 `;
+
 export default function Index() {
-  const userDetails = useSelector((store) => store.user);
-  const { name, _id } = userDetails.userDetail;
-  const navigate = useNavigate();
-  const navItemsForLggedIn = [
-    { label: "Editor", path: "/editor" },
-    { label: "Community", path: `/user/${_id}/newsfeed` },
-    { label: "Profile", path: `/user/${_id}` },
-  ];
-  const navItems = [
-    { label: "Editor", path: "/editor" },
-    { label: "Home", path: "/" },
-    { label: "Login", path: "/login" },
-  ];
+  const { isLoggedIn, userDetail } = useSelector((store) => store.user);
+  const id = userDetail?._id;
+
+  const navItems = isLoggedIn
+    ? [
+        { label: "Editor", path: "/editor" },
+        { label: "Community", path: `/user/${id}/newsfeed` },
+        { label: "Profile", path: `/user/${id}` },
+      ]
+    : [
+        { label: "Editor", path: "/editor" },
+        { label: "Home", path: "/" },
+        { label: "Login", path: "/login" },
+      ];
+
   return (
-    <Container>
-      {userDetails.isLoggedIn ? (
-        <Header navItems={navItemsForLggedIn} />
-      ) : (
-        <Header navItems={navItems} />
-      )}
-      <BodyContainer>
+    <Page>
+      <Header navItems={navItems} />
+      <Body>
         <Sidebar />
         <MainContent />
-      </BodyContainer>
-    </Container>
+      </Body>
+    </Page>
   );
 }

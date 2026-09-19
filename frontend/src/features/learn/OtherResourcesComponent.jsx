@@ -1,29 +1,31 @@
 import styled from "styled-components";
+import { Heading, Lede, SectionTitle } from "./shared";
+import { colors } from "../../ui/theme";
 
 const videos = [
   {
     title: "How to Crochet for Beginners",
     url: "https://youtu.be/aAxGTnVNJiE",
-    videoId: "aAxGTnVNJiE", 
+    videoId: "aAxGTnVNJiE",
   },
   {
     title: "How to read Crochet Charts and Symbols by Naztazia",
     url: "https://youtu.be/rRM5C7C2sFI",
-    videoId: "rRM5C7C2sFI", 
+    videoId: "rRM5C7C2sFI",
   },
   {
     title: "Crochet Symbol Charts Explained",
     url: "https://youtu.be/Zl64Ws8Ntc8",
-    videoId: "Zl64Ws8Ntc8", 
+    videoId: "Zl64Ws8Ntc8",
   },
 ];
-
 
 const articles = [
   {
     title: "How to crochet for beginners",
     link: "https://sarahmaker.com/how-to-crochet/",
-    description: "Step-by-step beginner guide with photos and simple instructions.",
+    description:
+      "Step-by-step beginner guide with photos and simple instructions.",
   },
   {
     title: "Reading Crochet Charts: A Helpful Beginners Guide",
@@ -33,134 +35,132 @@ const articles = [
   {
     title: "Easy Crochet Stitch Pattern",
     link: "https://www.creativecrochetcorner.com/post/easy-crochet-stitch-pattern",
-    description: "Simple patterns for beginners to practice and master stitches.",
+    description:
+      "Simple patterns for beginners to practice and master stitches.",
   },
 ];
 
-// Styled Components
-const Container = styled.div`
-  padding: 2rem;
-  background-color: #f9fafb;
-  min-height: 100vh;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-radius: 20px;
+const wavyHover = `
+  text-decoration: underline wavy ${colors.yarn};
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 `;
 
-const Heading = styled.h1`
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #2d3748;
-  text-align: center;
-  margin-bottom: 2.5rem;
-`;
-
-const Section = styled.div`
-  max-width: 1100px;
-  margin: 0 auto 3rem;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.2rem;
-  color: #4a5568;
+const Section = styled.section`
+  margin-bottom: 64px;
 `;
 
 const VideoGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 32px 24px;
 
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
+  @media (min-width: 1000px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 `;
 
 const VideoCard = styled.a`
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
-`;
-
-const Thumbnail = styled.img`
-  width: 100%;
-  height: auto;
-`;
-
-const VideoTitle = styled.div`
-  padding: 0.75rem 1rem;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #2d3748;
-`;
-
-const ArticleGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-top: 1rem;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-`;
-
-const ArticleCard = styled.a`
   display: block;
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1.2rem 1.5rem;
+  color: inherit;
   text-decoration: none;
-  transition: all 0.2s ease-in-out;
-  color: #2d3748;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+  &:hover span {
+    ${wavyHover}
+  }
+`;
+
+/* YouTube's hqdefault thumbnails have black bars; crop them to 16:9 */
+const Thumbnail = styled.img`
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 2px solid ${colors.ink};
+  border-radius: 12px;
+`;
+
+const VideoTitle = styled.span`
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+`;
+
+const ArticleList = styled.div``;
+
+const ArticleRow = styled.a`
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 8px 40px;
+  padding: 24px 0;
+  border-top: 2px dashed ${colors.stitchLine};
+  color: inherit;
+  text-decoration: none;
+
+  &:last-child {
+    border-bottom: 2px dashed ${colors.stitchLine};
   }
 
   h3 {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 0.6rem;
+    margin: 0;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
   p {
-    font-size: 0.925rem;
-    color: #4a5568;
+    margin: 0;
+    line-height: 1.5;
+    color: ${colors.muted};
+  }
+
+  &:hover h3 {
+    ${wavyHover}
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
   }
 `;
 
 export default function OtherResourcesComponent() {
   return (
-    <Container>
-      <Heading>Other Learning Resources</Heading>
+    <>
+      <Heading>Other learning resources</Heading>
+      <Lede>Videos and articles for learning to crochet and read charts.</Lede>
 
       <Section>
-        <SectionTitle>Helpful Video Tutorials</SectionTitle>
+        <SectionTitle>Video tutorials</SectionTitle>
         <VideoGrid>
-          {videos.map((video, idx) => (
-            <VideoCard key={idx} href={video.url} target="_blank" rel="noopener noreferrer">
-              <Thumbnail src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`} alt={video.title} />
+          {videos.map((video) => (
+            <VideoCard
+              key={video.videoId}
+              href={video.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Thumbnail
+                src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                alt=""
+              />
               <VideoTitle>{video.title}</VideoTitle>
             </VideoCard>
           ))}
@@ -168,17 +168,21 @@ export default function OtherResourcesComponent() {
       </Section>
 
       <Section>
-        <SectionTitle>Recommended Articles</SectionTitle>
-        <ArticleGrid>
-            {articles.map((article, idx) => (
-                <ArticleCard key={idx} href={article.link} target="_blank" rel="noopener noreferrer">
-                <h3>{article.title}</h3>
-                <p>{article.description}</p>
-                </ArticleCard>
-            ))}
-            </ArticleGrid>
-
+        <SectionTitle>Recommended articles</SectionTitle>
+        <ArticleList>
+          {articles.map((article) => (
+            <ArticleRow
+              key={article.link}
+              href={article.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h3>{article.title}</h3>
+              <p>{article.description}</p>
+            </ArticleRow>
+          ))}
+        </ArticleList>
       </Section>
-    </Container>
+    </>
   );
 }

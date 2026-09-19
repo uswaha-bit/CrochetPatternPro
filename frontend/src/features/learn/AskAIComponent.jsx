@@ -1,9 +1,9 @@
-import { useRef, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import styled from 'styled-components';
-import { useChatReply } from '../../hooks/useAI';
-import AskAIIcon from '../../assets/ask-ai.png';
-import { FaUserCircle } from 'react-icons/fa';
+import { useRef, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import styled from "styled-components";
+import { useChatReply } from "../../hooks/useAI";
+import AskAIIcon from "../../assets/ask-ai.png";
+import { FaUserCircle } from "react-icons/fa";
 import {
   setCurrentQuestion,
   addUserMessage,
@@ -11,109 +11,123 @@ import {
   clearCurrentQuestion,
   selectChatHistory,
   selectCurrentQuestion,
-} from './chatSlice'; 
+} from "./chatSlice";
+import { Heading, Lede, patchButton } from "./shared";
+import { colors } from "../../ui/theme";
 
-const AskAIContainer = styled.div`
+const Wrap = styled.div`
   display: flex;
   flex-direction: column;
-  height: 80vh;
-  max-height: 800px;
-  background-color: #f7f9fc;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  width: 100%;
+  gap: 16px;
   max-width: 800px;
-  margin: 0 auto;
-  padding: 1rem;
+  height: min(68vh, 720px);
+  min-height: 440px;
 `;
 
+/* A stitched panel: dashed border, lighter paper inside */
 const ChatWindow = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  margin-bottom: 1rem;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
+  overflow-y: auto;
+  padding: 20px;
+  border: 2px dashed ${colors.stitchLine};
+  border-radius: 16px;
+  background: ${colors.surface};
+`;
+
+const EmptyHint = styled.p`
+  margin: auto;
+  max-width: 32ch;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: ${colors.muted};
 `;
 
 const MessageWrapper = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  flex-direction: ${({ role }) => (role === 'user' ? 'row-reverse' : 'row')};
+  gap: 12px;
+  flex-direction: ${({ $role }) => ($role === "user" ? "row-reverse" : "row")};
 `;
 
 const Avatar = styled.div`
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
 `;
 
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
+  border: 2px solid ${colors.ink};
   border-radius: 50%;
+  background: ${colors.paper};
+  object-fit: cover;
 `;
 
 const MessageBubble = styled.div`
-  padding: 1rem;
-  border-radius: 14px;
-  max-width: 70%;
+  box-sizing: border-box;
+  max-width: min(75%, 60ch);
+  padding: 12px 16px;
+  border: 2px solid ${colors.ink};
+  border-radius: ${({ $role }) =>
+    $role === "user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px"};
+  background: ${({ $role }) => ($role === "user" ? colors.yarn : colors.paper)};
+  color: ${colors.ink};
   font-size: 1rem;
-  color: #2c3e50;
+  line-height: 1.55;
   white-space: pre-wrap;
-  background-color: ${({ role }) => (role === 'user' ? '#dbeafe' : '#eef1f7')};
-  line-height: 1.5;
+`;
+
+const InlineCode = styled.code`
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(22, 48, 32, 0.1);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.9em;
 `;
 
 const InputArea = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 14px;
 `;
 
 const TextArea = styled.textarea`
-  padding: 1rem;
-  font-size: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: 96px;
+  padding: 14px 16px;
+  border: 2px solid ${colors.ink};
   border-radius: 12px;
-  border: 1px solid #ccc;
+  background: ${colors.surface};
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1rem;
   resize: none;
-  height: 100px;
-  background: #fff;
-  transition: border-color 0.3s;
 
-  &:focus {
-    outline: none;
-    border-color: var(--primary-color, #6c5ce7);
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
   }
 `;
 
 const Button = styled.button`
+  ${patchButton}
   align-self: flex-end;
-  padding: 0.75rem 1.5rem;
-  background-color: #6c5ce7;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #574b90;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 `;
 
-// Simple markdown parser component
+// Simple markdown parser component (logic unchanged)
 const MarkdownText = ({ children }) => {
   const parseMarkdown = (text) => {
     const parts = [];
@@ -124,11 +138,11 @@ const MarkdownText = ({ children }) => {
       // Bold text (**text** or *text*)
       const boldMatch = remaining.match(/(\*\*([^*]+)\*\*|\*([^*]+)\*)/);
       if (boldMatch) {
-        // Add text before bold
         if (boldMatch.index > 0) {
-          parts.push(<span key={key++}>{remaining.slice(0, boldMatch.index)}</span>);
+          parts.push(
+            <span key={key++}>{remaining.slice(0, boldMatch.index)}</span>
+          );
         }
-        // Add bold text
         const boldText = boldMatch[2] || boldMatch[3];
         parts.push(<strong key={key++}>{boldText}</strong>);
         remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
@@ -137,29 +151,14 @@ const MarkdownText = ({ children }) => {
       else {
         const codeMatch = remaining.match(/`([^`]+)`/);
         if (codeMatch) {
-          // Add text before code
           if (codeMatch.index > 0) {
-            parts.push(<span key={key++}>{remaining.slice(0, codeMatch.index)}</span>);
+            parts.push(
+              <span key={key++}>{remaining.slice(0, codeMatch.index)}</span>
+            );
           }
-          // Add code
-          parts.push(
-            <code 
-              key={key++} 
-              style={{
-                backgroundColor: '#f1f5f9',
-                padding: '0.125rem 0.375rem',
-                borderRadius: '4px',
-                fontFamily: 'Monaco, Consolas, monospace',
-                fontSize: '0.875rem',
-                color: '#e53e3e'
-              }}
-            >
-              {codeMatch[1]}
-            </code>
-          );
+          parts.push(<InlineCode key={key++}>{codeMatch[1]}</InlineCode>);
           remaining = remaining.slice(codeMatch.index + codeMatch[0].length);
         } else {
-          // No more markdown, add remaining text
           parts.push(<span key={key++}>{remaining}</span>);
           break;
         }
@@ -187,29 +186,25 @@ export default function AskAIComponent() {
     dispatch(addUserMessage(trimmed));
 
     // Create updated history for API call
-    const updatedHistory = [...history, { role: 'user', text: trimmed }];
+    const updatedHistory = [...history, { role: "user", text: trimmed }];
 
     askAI(
       { history: updatedHistory, message: trimmed },
       {
         onSuccess: (reply) => {
-          // Add AI response to Redux store
           dispatch(addAIMessage(reply));
-          // Clear the current question
           dispatch(clearCurrentQuestion());
         },
         onError: (err) => {
-          // Add error message to Redux store
-          dispatch(addAIMessage(err.message || 'Error occurred.'));
-          // Clear the current question even on error
+          dispatch(addAIMessage(err.message || "Error occurred."));
           dispatch(clearCurrentQuestion());
         },
       }
     );
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleAsk();
     }
@@ -221,45 +216,61 @@ export default function AskAIComponent() {
 
   useEffect(() => {
     if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [history]);
 
   return (
-    <AskAIContainer>
-      <ChatWindow>
-        {history.map((entry, index) => (
-          <MessageWrapper key={index} role={entry.role}>
-            <Avatar>
-              {entry.role === 'user' ? (
-                <FaUserCircle size={36} color="black" />
-              ) : (
-                <AvatarImage src={AskAIIcon} alt="AI Avatar" />
-              )}
-            </Avatar>
-            <MessageBubble role={entry.role}>
-              {entry.role === 'model' ? (
-                <MarkdownText>{entry.text}</MarkdownText>
-              ) : (
-                entry.text
-              )}
-            </MessageBubble>
-          </MessageWrapper>
-        ))}
-        <div ref={bottomRef} />
-      </ChatWindow>
+    <>
+      <Heading>Ask AI</Heading>
+      <Lede>Stuck on a stitch or a step in the editor? Ask away.</Lede>
 
-      <InputArea>
-        <TextArea
-          placeholder="Type your question here..."
-          value={currentQuestion}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-        />
-        <Button onClick={handleAsk} disabled={!currentQuestion.trim() || isPending}>
-          {isPending ? 'Thinking...' : 'Ask'}
-        </Button>
-      </InputArea>
-    </AskAIContainer>
+      <Wrap>
+        <ChatWindow role="log" aria-live="polite" aria-label="Conversation">
+          {history.length === 0 && (
+            <EmptyHint>
+              Ask about a stitch, a chart symbol, or anything in the editor.
+            </EmptyHint>
+          )}
+
+          {history.map((entry, index) => (
+            <MessageWrapper key={index} $role={entry.role}>
+              <Avatar>
+                {entry.role === "user" ? (
+                  <FaUserCircle size={36} color={colors.ink} />
+                ) : (
+                  <AvatarImage src={AskAIIcon} alt="AI" />
+                )}
+              </Avatar>
+              <MessageBubble $role={entry.role}>
+                {entry.role === "model" ? (
+                  <MarkdownText>{entry.text}</MarkdownText>
+                ) : (
+                  entry.text
+                )}
+              </MessageBubble>
+            </MessageWrapper>
+          ))}
+          <div ref={bottomRef} />
+        </ChatWindow>
+
+        <InputArea>
+          <TextArea
+            placeholder="Type your question here..."
+            aria-label="Your question"
+            value={currentQuestion}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+          />
+          <Button
+            type="button"
+            onClick={handleAsk}
+            disabled={!currentQuestion.trim() || isPending}
+          >
+            {isPending ? "Thinking..." : "Ask"}
+          </Button>
+        </InputArea>
+      </Wrap>
+    </>
   );
 }
