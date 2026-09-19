@@ -1,184 +1,241 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Link } from "react-router-dom";
+import {
+  colors,
+  fontStack,
+  HEADER_HEIGHT,
+  patchButton,
+  ghostButton,
+} from "./theme";
 
+const { paper, surface, ink, muted, leaf, yarn, error, stitchLine, grid } =
+  colors;
+
+/* ---------- Page area under the header ---------- */
+export const Container = styled.div`
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: calc(100vh - ${HEADER_HEIGHT});
+  padding: clamp(32px, 7vw, 88px) 20px 96px;
+  background: ${paper};
+  color: ${ink};
+  font-family: ${fontStack};
+
+  /* Graph paper, fading out downwards (same as the home hero) */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: linear-gradient(${grid} 1px, transparent 1px),
+      linear-gradient(90deg, ${grid} 1px, transparent 1px);
+    background-size: 32px 32px;
+    -webkit-mask-image: linear-gradient(#000 40%, transparent);
+    mask-image: linear-gradient(#000 40%, transparent);
+  }
+`;
+
+/* ---------- The form, drawn as a stitched swatch ---------- */
 export const FieldsContainer = styled.form`
-  background-color: var(--primary-color);
-  width: 40%;
+  position: relative;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 480px;
+  padding: 40px 36px;
+  border: 2px solid ${ink};
   border-radius: 20px;
-  padding: 50px;
-  margin-top: 20px;
+  background: ${surface};
+  box-shadow: 0 6px 0 ${ink};
 
-  @media (max-width: 990px) {
-    width: 55%;
+  /* dashed seam just inside the edge */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 2px dashed ${stitchLine};
+    border-radius: 13px;
+    pointer-events: none;
   }
 
-  @media (max-width: 700px) {
-    width: 85%;
+  @media (max-width: 480px) {
+    padding: 32px 24px;
   }
 `;
 
-
-export const Container = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  flex: 1;
-`;
-
-export const Title = styled.div`
-  font-size: 34px;
-  width: 100%;
-  text-align: center;
-  padding-block: 10px 30px;
+export const Title = styled.h2`
+  margin: 0;
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 96;
+  text-wrap: balance;
 `;
 
 export const InputsContainer = styled.div`
-  margin-bottom: 20px;
-  width: 90%;
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
 `;
 
 export const InputWrapper = styled.div`
   position: relative;
   width: 100%;
-  margin: 10px 0;
 `;
-export const Input = styled.input`
-  background-color: var(--secondary-color) !important;
-    border: ${({ $hasError }) => ($hasError ? "1px solid red" : "1px solid transparent")} !important;
-  border-radius: 10px !important;
-  padding: 20px 15px !important;
-  width: 90% !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
 
-  &:focus,
-  &:active {
-    outline: none !important;
-    box-shadow: none !important;
-    border: ${({ $hasError }) => ($hasError ? "1px solid red" : "var(--fifth-color)")} !important;
-    background-color: var(--secondary-color) !important;
-  }
-
-  &::placeholder {
-    color: transparent !important;
-  }
-`;
-export const Select = styled.select`
-  width: 98%;
-  padding: 20px 15px !important;
-  border: 1px solid ${props => props.$hasError ? 'red' : 'transparent'};
-  border-radius: 10px;
-  font-size: 16px;
-  transition: all 0.3s;
-  background-color: var(--secondary-color) !important;
-
-  &:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border: ${({ $hasError }) => ($hasError ? "1px solid red" : "var(--fifth-color)")} !important;
-    background-color: var(--secondary-color) !important;
-  }
-`;
-export const RadioTitleLabel = styled.label`
-  font-size: 16px !important;
-  color: ${({ $hasError }) => ($hasError ? "red" : "var(--fourth-color)")} !important;
-`;
+/* ---------- Floating label ----------
+   Idle: sits inside the field like a placeholder.
+   Focused or filled: shrinks and rides on the top border. */
 export const Label = styled.label`
-  position: absolute !important;
-  left: 15px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  transition: 0.3s ease-in-out !important;
-  pointer-events: none !important;
-  color: ${({ $hasError }) => ($hasError ? "red" : "var(--fourth-color)")} !important;
+  position: absolute;
+  top: 26px; /* half of the 52px field height */
+  left: 12px;
+  z-index: 1;
+  padding: 0 6px;
+  transform: translateY(-50%);
+  background: transparent;
+  color: ${muted};
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
+  transition: top 0.15s ease, font-size 0.15s ease, color 0.15s ease,
+    background-color 0.15s ease;
 
-  ${({ $isFocused, $hasContent, $isAutofilled, $isInvalid }) =>
-    ($isFocused || $hasContent || $isAutofilled) &&
-    `
-    top: -23% !important;
-  color: ${({ $hasError }) => ($hasError ? "red" : "var(--fifth-color)")}!important;
-  `}
+  ${({ $isFocused, $hasContent }) =>
+    ($isFocused || $hasContent) &&
+    css`
+      top: 0;
+      background: ${surface};
+      color: ${ink};
+      font-size: 0.8rem;
+      font-weight: 700;
+    `}
+
+  ${({ $hasError }) =>
+    $hasError &&
+    css`
+      color: ${error};
+    `}
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
-export const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: space-around;
-  width: 70%;
+/* ---------- Fields ---------- */
+const field = css`
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 2px solid ${({ $hasError }) => ($hasError ? error : ink)};
+  border-radius: 12px;
+  background: ${surface};
+  color: ${ink};
+  font: inherit;
+  font-size: 1rem;
+
+  &:focus-visible {
+    outline: 3px solid ${leaf};
+    outline-offset: 2px;
+  }
+
+  /* keep browser autofill from painting its own colour */
+  &:-webkit-autofill {
+    box-shadow: 0 0 0 100px ${surface} inset;
+    -webkit-text-fill-color: ${ink};
+  }
 `;
 
-export const Button = styled.button`
-  background-color: ${(props) =>
-    props.$variant === "cancel" ? "var(--secondary-color)" : "var(--fifth-color)"};
-  font-size: 18px;
-  padding: 12px 24px;
-  min-width: 100px;
-  display: flex;
-  border: none;
-  border-radius: 10px;
-  justify-content: center;
-  align-items: center;
+export const Input = styled.input`
+  ${field}
+  color-scheme: light;
+`;
+
+const chevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%23163020' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`;
+
+export const Select = styled.select`
+  ${field}
+  padding-right: 44px;
+  appearance: none;
+  background-image: ${chevron};
+  background-repeat: no-repeat;
+  background-position: right 16px center;
   cursor: pointer;
-  transition: 0.3s;
 
-  &:hover {
-    background-color: ${(props) =>
-      props.variant === "cancel"
-        ? "var(--hovered-grey-button)"
-        : "var(--hovered-green-button)"};
+  /* "Select …" placeholder option looks like a placeholder */
+  &:has(option[value=""]:checked) {
+    color: ${muted};
   }
 `;
 
-export const BottomLink = styled.div`
-  display: flex;
-  font-size: 14px;
-`;
-
-export const StyledLink = styled(Link)`
-  text-decoration: none;
-  color: #281562;
-  font-weight: bold;
-  margin-left: 5px;
-`;
-
-
+// Wraps the date input; the field itself fills the width
 export const DatePickerWrapper = styled.div`
-  .react-datepicker-wrapper {
-    width: 100%;
-  }
+  width: 100%;
 
-  .react-datepicker__input-container {
+  & > * {
     width: 100%;
-  }
-
-  input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid ${props => props.$hasError ? '#ff4d4f' : '#d9d9d9'};
-    border-radius: 4px;
-    font-size: 16px;
-    transition: all 0.3s;
-
-    &:focus {
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-      outline: none;
-    }
   }
 `;
 
 export const ErrorMessage = styled.p`
-  color: #ff4d4f;
-  font-size: 14px;
-  margin-top: 4px;
+  margin: 6px 0 0;
+  color: ${error};
+  font-size: 0.9rem;
+  font-weight: 500;
+`;
+
+/* ---------- Buttons ---------- */
+export const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 14px;
+  padding-bottom: 4px; /* room for the patch button's shadow */
+`;
+
+// $variant="cancel" → outlined; anything else → the yarn patch
+export const Button = styled.button`
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  ${({ $variant }) => ($variant === "cancel" ? ghostButton : patchButton)}
+`;
+
+/* ---------- Footer link ---------- */
+export const BottomLink = styled.p`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  color: ${muted};
+  font-size: 1rem;
+`;
+
+export const StyledLink = styled(Link)`
+  color: ${ink};
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: ${leaf};
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+
+  &:hover {
+    text-decoration-style: wavy;
+    text-decoration-color: ${yarn};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${leaf};
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
 `;

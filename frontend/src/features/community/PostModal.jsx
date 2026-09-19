@@ -6,189 +6,286 @@ import { useCreatePost } from "./useCreatePost";
 import { useDispatch } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { colors, fontStack, patchButton, ghostButton } from "../../ui/theme";
 
+/* ---------- Dialog: the same stitched swatch as the login card ---------- */
 const Modal = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  padding: 24px 16px;
+  background: rgba(22, 48, 32, 0.55);
+  color: ${colors.ink};
+  font-family: ${fontStack};
 `;
 
 const ModalContent = styled.div`
-  background-color: white;
-  border-radius: 15px;
-  padding: 2rem;
-  width: 90%;
-  max-width: 500px;
-  // max-height: 80vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100dvh - 48px);
+  border: 2px solid ${colors.ink};
+  border-radius: 20px;
+  background: ${colors.surface};
+  box-shadow: 0 6px 0 ${colors.ink};
+
+  /* dashed seam just inside the edge */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 2px dashed ${colors.stitchLine};
+    border-radius: 13px;
+    pointer-events: none;
+  }
+`;
+
+/* The seam stays put; only this part scrolls */
+const ModalBody = styled.div`
   overflow-y: auto;
+  padding: 36px;
+
+  @media (max-width: 480px) {
+    padding: 28px 22px;
+  }
 `;
 
 const ModalHeader = styled.div`
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  gap: 16px;
+  margin-bottom: 28px;
 `;
 
 const ModalTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
   margin: 0;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 96;
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid ${colors.ink};
+  border-radius: 10px;
+  background: transparent;
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 
   &:hover {
-    color: #333;
+    background: ${colors.ink};
+    color: ${colors.paper};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `;
 
+/* ---------- Fields ---------- */
 const FormGroup = styled.div`
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 `;
 
 const Label = styled.label`
   display: block;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
 `;
 
-const Input = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
+const fieldBorder = ({ $error }) => ($error ? colors.error : colors.ink);
 
-  &:focus {
-    outline: none;
-    border-color: #5c6bc0;
+const Input = styled.input`
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 2px solid ${fieldBorder};
+  border-radius: 12px;
+  background: ${colors.surface};
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1rem;
+
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
   }
 `;
 
 const TextArea = styled.textarea`
+  box-sizing: border-box;
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
   min-height: 120px;
+  padding: 14px 16px;
+  border: 2px solid ${fieldBorder};
+  border-radius: 12px;
+  background: ${colors.surface};
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
   resize: vertical;
-  transition: border-color 0.2s;
 
-  &:focus {
-    outline: none;
-    border-color: #5c6bc0;
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
   }
 `;
 
 const FileInput = styled.input`
+  box-sizing: border-box;
   width: 100%;
-  padding: 0.75rem;
-  border: 2px dashed #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 14px 16px;
+  border: 2px dashed ${({ $error }) => ($error ? colors.error : colors.stitchLine)};
+  border-radius: 12px;
+  background: ${colors.surface};
+  color: ${colors.muted};
+  font: inherit;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: border-color 0.2s;
 
   &:hover {
-    border-color: #5c6bc0;
+    border-color: ${colors.ink};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  &::file-selector-button {
+    margin-right: 14px;
+    padding: 6px 14px;
+    border: 2px solid ${colors.ink};
+    border-radius: 10px;
+    background: transparent;
+    color: ${colors.ink};
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &::file-selector-button:hover {
+    background: ${colors.ink};
+    color: ${colors.paper};
   }
 `;
 
-const ModalButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
-`;
-
-const CancelButton = styled.button`
-  background: none;
-  border: 2px solid #e0e0e0;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #999;
-    color: #333;
-  }
-`;
-
-const SubmitButton = styled.button`
-  background-color: #5c6bc0;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #4a5ac0;
-  }
-`;
 const ErrorMessage = styled.span`
-  color: #f44336;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
   display: block;
+  margin-top: 6px;
+  color: ${colors.error};
+  font-size: 0.9rem;
+  font-weight: 500;
 `;
+
 const FilePreview = styled.div`
-  margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 8px;
+  margin-top: 14px;
 `;
 
 const FileItem = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  background-color: #f5f5f5;
-  padding: 0.5rem;
-  border-radius: 4px;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 6px 4px 12px;
+  border: 2px solid ${colors.ink};
+  border-radius: 999px;
+  background: ${colors.paper};
   font-size: 0.875rem;
-`;
-const RemoveFileButton = styled.button`
-  background: none;
-  border: none;
-  color: #f44336;
-  margin-left: 0.5rem;
-  cursor: pointer;
-  font-size: 1rem;
+  font-weight: 500;
 
-  &:hover {
-    color: #d32f2f;
+  span {
+    overflow: hidden;
+    max-width: 220px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 `;
+
+const RemoveFileButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: ${colors.error};
+    color: ${colors.surface};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 1px;
+  }
+`;
+
+/* ---------- Buttons ---------- */
+const ModalButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 32px;
+  padding-bottom: 4px; /* room for the patch button's shadow */
+`;
+
+const CancelButton = styled.button`
+  ${ghostButton}
+`;
+
+const SubmitButton = styled.button`
+  ${patchButton}
+`;
+
 function PostModal({ show, handlePostModalCancel }) {
   const dispatch = useDispatch();
-  const { createPost: createPostApi, isLoading } = useCreatePost();
+  const { createPost: createPostApi } = useCreatePost();
   const [selectedFiles, setIsSelectedFiles] = useState([]);
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -198,7 +295,6 @@ function PostModal({ show, handlePostModalCancel }) {
     setValue,
     reset,
     formState: { errors },
-    watch,
   } = useForm({
     defaultValues: {
       title: "",
@@ -221,9 +317,6 @@ function PostModal({ show, handlePostModalCancel }) {
     setValue("files", updatedFiles);
   };
 
-  //   const (e) => {
-  //     e.preventDefault();
-  //   };
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
@@ -272,10 +365,6 @@ function PostModal({ show, handlePostModalCancel }) {
     handlePostModalCancel();
   };
 
-  //   const handleOpen = () => {
-  //     setIsModalOpen(true);
-  //   };
-
   if (!show) return null;
   return (
     <Modal
@@ -286,106 +375,117 @@ function PostModal({ show, handlePostModalCancel }) {
         }
       }}
     >
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>Create New Post</ModalTitle>
-          <CloseButton
-            onClick={() => {
-              handleCancel();
-              handlePostModalCancel();
-            }}
-          >
-            ×
-          </CloseButton>
-        </ModalHeader>
+      <ModalContent
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-modal-title"
+      >
+        <ModalBody>
+          <ModalHeader>
+            <ModalTitle id="post-modal-title">Create new post</ModalTitle>
+            <CloseButton
+              type="button"
+              aria-label="Close"
+              onClick={() => {
+                handleCancel();
+                handlePostModalCancel();
+              }}
+            >
+              ×
+            </CloseButton>
+          </ModalHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <FormGroup>
-            <Label>Title</Label>
-            <Input
-              type="text"
-              {...register("title", {
-                required: true,
-                minLength: {
-                  value: 6,
-                  message: "title must be atleast 6 characters",
-                },
-                maxLength: {
-                  value: 500,
-                  message: "title must be at most 500 characters",
-                },
-              })}
-              placeholder="Enter post title..."
-              error={errors.title}
-            />
-            {errors.title && (
-              <ErrorMessage>{errors.title.message}</ErrorMessage>
-            )}
-          </FormGroup>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <FormGroup>
+              <Label htmlFor="post-title">Title</Label>
+              <Input
+                id="post-title"
+                type="text"
+                {...register("title", {
+                  required: "Title is required",
+                  minLength: {
+                    value: 6,
+                    message: "title must be atleast 6 characters",
+                  },
+                  maxLength: {
+                    value: 500,
+                    message: "title must be at most 500 characters",
+                  },
+                })}
+                placeholder="Enter post title..."
+                $error={!!errors.title}
+              />
+              {errors.title && (
+                <ErrorMessage>{errors.title.message}</ErrorMessage>
+              )}
+            </FormGroup>
 
-          <FormGroup>
-            <Label>Description</Label>
-            <TextArea
-              name="description"
-              {...register("description", {
-                required: false,
-                minLength: {
-                  value: 10,
-                  message: "description must of atleast 10 characters",
-                },
-                maxLength: {
-                  value: 1000,
-                  message: "description can be max of 1000 characters",
-                },
-              })}
-              placeholder="Share your crochet experience, pattern details, or tips..."
-              error={errors.description}
-            />
-            {errors.description && (
-              <ErrorMessage>{errors.description.message}</ErrorMessage>
-            )}
-          </FormGroup>
+            <FormGroup>
+              <Label htmlFor="post-description">Description</Label>
+              <TextArea
+                id="post-description"
+                {...register("description", {
+                  required: false,
+                  minLength: {
+                    value: 10,
+                    message: "description must of atleast 10 characters",
+                  },
+                  maxLength: {
+                    value: 1000,
+                    message: "description can be max of 1000 characters",
+                  },
+                })}
+                placeholder="Share your crochet experience, pattern details, or tips..."
+                $error={!!errors.description}
+              />
+              {errors.description && (
+                <ErrorMessage>{errors.description.message}</ErrorMessage>
+              )}
+            </FormGroup>
 
-          <FormGroup>
-            <Label>Upload Image or Video</Label>
-            <FileInput
-              type="file"
-              name="file"
-              onChange={handleInputChange}
-              accept="image/*,video/*"
-              multiple
-              error={errors.files}
-            />
-            {errors.files && (
-              <ErrorMessage>{errors.files.message}</ErrorMessage>
-            )}
-            {selectedFiles.length > 0 && (
-              <FilePreview>
-                {selectedFiles.map((file, index) => (
-                  <FileItem key={index}>
-                    <span>{file.name}</span>
-                    <RemoveFileButton
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      title="Remove File"
-                    >
-                      x
-                    </RemoveFileButton>
-                  </FileItem>
-                ))}
-              </FilePreview>
-            )}
-          </FormGroup>
+            <FormGroup>
+              <Label htmlFor="post-files">Upload image or video</Label>
+              <FileInput
+                id="post-files"
+                type="file"
+                name="file"
+                onChange={handleInputChange}
+                accept="image/*,video/*"
+                multiple
+                $error={!!errors.files}
+              />
+              {errors.files && (
+                <ErrorMessage>{errors.files.message}</ErrorMessage>
+              )}
+              {selectedFiles.length > 0 && (
+                <FilePreview>
+                  {selectedFiles.map((file, index) => (
+                    <FileItem key={index}>
+                      <span>{file.name}</span>
+                      <RemoveFileButton
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        aria-label={`Remove ${file.name}`}
+                        title="Remove file"
+                      >
+                        ×
+                      </RemoveFileButton>
+                    </FileItem>
+                  ))}
+                </FilePreview>
+              )}
+            </FormGroup>
 
-          <ModalButtons>
-            <CancelButton type="button" onClick={handleCancelClick}>
-              Cancel
-            </CancelButton>
-            <SubmitButton type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Post"}
-            </SubmitButton>
-          </ModalButtons>
-        </form>
+            <ModalButtons>
+              <CancelButton type="button" onClick={handleCancelClick}>
+                Cancel
+              </CancelButton>
+              <SubmitButton type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create post"}
+              </SubmitButton>
+            </ModalButtons>
+          </form>
+        </ModalBody>
       </ModalContent>
     </Modal>
   );
