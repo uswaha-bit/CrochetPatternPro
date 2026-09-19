@@ -1,0 +1,4 @@
+.content-wrapper {
+  max-height: 100dvh;
+  max-width: 97dvw; /* Ensure full viewport height */
+}

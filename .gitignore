@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+
+# Environment files (secrets)
+.env
+.env.*
+*.env
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build output / coverage
+dist
+build
+coverage
+
+# OS / editor
+.DS_Store
+.vscode
+.idea

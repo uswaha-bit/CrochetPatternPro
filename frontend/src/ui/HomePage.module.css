@@ -1,0 +1,444 @@
+/* Tip: for best performance, move this font link into index.html instead:
+   <link rel="preconnect" href="https://fonts.googleapis.com" />
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet" /> */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap");
+
+/* ---------- Tokens ---------- */
+.page {
+  --paper: #f2f7e7; /* graph-paper green */
+  --grid: rgba(74, 138, 60, 0.13);
+  --ink: #163020; /* deep forest */
+  --muted: #4b5d4e;
+  --leaf: #4a8a3c; /* the leaf green from your illustrations */
+  --yarn: #f2b33d; /* marigold yarn */
+
+  width: 100%;
+  flex: 1;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  overflow-x: clip;
+}
+
+.page a:focus-visible {
+  outline: 3px solid var(--leaf);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 28px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease, color 0.15s ease;
+}
+
+/* A stitched patch: solid yarn with a dashed seam inside */
+.btnPrimary {
+  background: var(--yarn);
+  color: var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
+}
+.btnPrimary::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px dashed rgba(22, 48, 32, 0.5);
+  border-radius: 9px;
+  pointer-events: none;
+}
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--ink);
+}
+.btnPrimary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.btnGhost {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  background: transparent;
+}
+.btnGhost:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(40px, 7vw, 88px) clamp(20px, 5vw, 64px)
+    clamp(56px, 8vw, 104px);
+}
+
+/* Graph paper, the surface every chart is drawn on. Fades out downwards. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: linear-gradient(#000 55%, transparent);
+  mask-image: linear-gradient(#000 55%, transparent);
+}
+
+.heroInner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: 32px 64px;
+  align-items: end;
+}
+
+.headline {
+  margin: 0;
+  font-size: clamp(2.9rem, 7.2vw, 6.25rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 96;
+  text-wrap: balance;
+}
+
+.lede {
+  margin: 0 0 24px;
+  max-width: 34ch;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.journey {
+  --ball-w: 80px;
+  --ball-h: calc(var(--ball-w) * 1.591); /* logo is 198 × 315 */
+  --thread-x: calc(var(--ball-w) * 0.91); /* where the logo's tail ends */
+
+  position: relative;
+  margin-top: clamp(48px, 7vw, 96px);
+}
+
+/* The logo, mirrored so its loose tail points toward the stages.
+   `top` puts the tip of the tail at y = 150px, which is where the thread starts. */
+.ball {
+  position: absolute;
+  left: 0;
+  top: calc(150px - var(--ball-h) * 0.767);
+  z-index: 2;
+  width: var(--ball-w);
+  height: auto;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+/* The thread picks up exactly where the logo's tail ends */
+.thread {
+  position: absolute;
+  top: 0;
+  left: var(--thread-x);
+  width: calc(100% - var(--thread-x));
+  height: 240px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.thread path {
+  fill: none;
+  stroke: var(--yarn);
+  stroke-width: 1; /* was 5; closer to the logo's thin tail */
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 2.6s cubic-bezier(0.45, 0.05, 0.4, 1) 0.4s forwards;
+}
+
+/* Leave room for the ball on the left */
+.stages {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 0 0 calc(var(--ball-w) + 12px);
+  padding: 0;
+  list-style: none;
+}
+
+
+/* Each stage pops in just as the thread reaches it. This is the page's one
+   orchestrated moment; everything else stays still. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  animation: pop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(0.7s + var(--i) * 0.6s);
+}
+
+.frame {
+  display: grid;
+  place-items: center;
+  height: 240px;
+}
+
+.frame img {
+  display: block;
+  height: auto;
+}
+
+.tall {
+  height: 220px !important;
+  width: auto;
+  rotate: 90deg;
+}
+
+.wide {
+  width: 100%;
+  max-width: 320px;
+}
+
+.caption {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.captionTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.captionText {
+  margin: 2px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Features: rows divided by a stitch line ---------- */
+.features {
+  padding: clamp(48px, 7vw, 96px) clamp(20px, 5vw, 64px);
+}
+
+.featuresInner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.featuresTitle {
+  margin: 0 0 32px;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 5fr) auto;
+  gap: 12px 40px;
+  align-items: baseline;
+  padding: 28px 0;
+  border-top: 2px dashed rgba(22, 48, 32, 0.35);
+}
+.row:last-child {
+  border-bottom: 2px dashed rgba(22, 48, 32, 0.35);
+}
+
+.rowTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rowText {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.rowLink {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--leaf);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  white-space: nowrap;
+}
+.rowLink:hover {
+  text-decoration-style: wavy;
+  text-decoration-color: var(--yarn);
+}
+
+/* ---------- Closing ---------- */
+.closing {
+  padding: clamp(56px, 8vw, 104px) clamp(20px, 5vw, 64px) 32px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.closingInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px 64px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.closingTitle {
+  margin: 0;
+  max-width: 12em;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.onDark {
+  box-shadow: 0 4px 0 var(--leaf);
+}
+.onDark:hover {
+  box-shadow: 0 6px 0 var(--leaf);
+}
+.onDark:active {
+  box-shadow: 0 1px 0 var(--leaf);
+}
+
+.footer {
+  max-width: 1280px;
+  margin: 64px auto 0;
+  padding-top: 20px;
+  border-top: 2px dashed rgba(242, 247, 231, 0.3);
+  font-size: 0.95rem;
+  color: rgba(242, 247, 231, 0.75);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .intro {
+    grid-template-columns: 1fr;
+  }
+
+  /* Thread needs the full-width row, so hide it when stages wrap */
+  .thread,
+  .ball {
+    display: none;
+  }
+
+  .stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 40px;
+    margin-left: 0; 
+  }
+
+  .stage {
+    animation-delay: calc(var(--i) * 0.15s);
+  }
+}
+
+@media (max-width: 720px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 24px 0;
+  }
+  .rowLink {
+    justify-self: start;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 460px) {
+  .stages {
+    grid-template-columns: 1fr;
+  }
+  .frame {
+    height: 200px;
+  }
+  .tall {
+    height: 190px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .stage {
+    animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+}
