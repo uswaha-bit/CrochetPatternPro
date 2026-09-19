@@ -1,4 +1,11 @@
-import styled from "styled-components";
+   import { colors } from "../../ui/theme";
+   import {
+     Container,
+     CanvasContainer,
+     ExpandButton,
+     ZoomButtonsContainer,
+     ZoomButton,
+   } from "./EditorStyles";
 import StitchesBar from "./StitchesBar";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
@@ -11,66 +18,6 @@ import { FaExpand, FaCompress } from "react-icons/fa";
 import stitchDistances from '../utils/stitchDistances';
 import CrochetStitchDrawings3d from './CanvasDrawingsFor3D'
 import Vector from "../utils/vector";
-const Container = styled.div`
-  display: flex;
-  position: relative;
-`;
-
-const CanvasContainer = styled.div`
-  width: 100%;
-  background-color: var(--third-color);
-  margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
-  height: ${({ $expanded, $selectedMenu }) =>
-    $expanded ? "100%" : $selectedMenu ? "65vh" : "75vh"};
-  border-radius: 30px;
-  overflow: hidden;
-  box-sizing: border-box;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-`;
-
-const ExpandButton = styled.div`
-  cursor: pointer;
-  position: absolute;
-  border-radius: 30px;
-  background-color: var(--secondary-color);
-  bottom: 35px;
-  right: 40px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  z-index: 99;
-  &:hover {
-    background-color: var(--primary-color);
-  }
-`;
-
-const ZoomButtonsContainer = styled.div`
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-  top: 28px;
-  right: 40px;
-`;
-
-const ZoomButton = styled.div`
-  cursor: pointer;
-  padding: 10px;
-  background-color: var(--secondary-color);
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  &:hover {
-    background-color: var(--primary-color);
-  }
-`;
-
-
 
 export default function Canvas3D() {
  const isEmpty =
@@ -144,9 +91,7 @@ const getLinkObject = (link) =>
 
     if (!container) return;
 
-    const bgColor = getComputedStyle(document.documentElement)
-      .getPropertyValue("--third-color")
-      .trim();
+    const bgColor = colors.surface;
 
 
   const graphInstance = ForceGraph3D()(container)
@@ -314,10 +259,10 @@ const getLinkObject = (link) =>
           ref={containerRef}
         ></CanvasContainer>
         <ZoomButtonsContainer>
-          <ZoomButton onClick={() => handleZoom(true)}>
+          <ZoomButton type="button" aria-label="Zoom in" onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
           </ZoomButton>
-          <ZoomButton onClick={() => handleZoom(false)}>
+          <ZoomButton type="button" aria-label="Zoom out" onClick={() => handleZoom(false)}>
             <FaMinus size={12} />
           </ZoomButton>
         </ZoomButtonsContainer>

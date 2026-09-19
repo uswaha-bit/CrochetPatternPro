@@ -241,57 +241,54 @@ export const getAllPost = async (req, res, next) => {
 };
 
 export const getNewsFeed = async (req, res, next) => {
-  const userId = req.user.id;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  console.log("generating post for user");
-  const [interactedPostIds, allPosts] = await Promise.all([
-    getUserInteractions(userId),
-    getPostFromCache(),
-  ]);
-
-  const allAvailablePosts = allPosts.filter((post) => {
-    return !interactedPostIds.includes(post._id.toString());
-  });
-
-  // console.log("ainteractedPostIds", interactedPostIds);
-  // console.log("allPosts", allPosts);
-  // const interactedPosts = await getUserInteractedPosts(userId);
-  // const newsFeed = await Post.find({
-  //   _id: { $nin: interactedPosts },
-  // })
-  //   .populate("createdBy", "name profileImage skillLevel")
-  //   .populate("comments.user", "name profileImage")
-  //   .populate("likes.userId", "name")
-  //   .populate("shares.userId", "name profileImage")
-  //   .sort({ createdAt: -1 })
-  //   .skip(skip)
-  //   .limit(limit);
-
-  // Get total count for pagination
-  const paginatedPosts = allAvailablePosts.slice(skip, skip + limit);
-  const totalPosts = allAvailablePosts.length;
-  const hasMore = skip + paginatedPosts.length < totalPosts;
-
-  res.status(StatusCodes.OK).json({
-    success: true,
-    data: {
-      posts: allAvailablePosts,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalPosts / limit),
-        totalPosts,
-        hasMore,
-        postsPerPage: limit,
-      },
-    },
-    message: "Newsfeed posts fetched successfully",
-  });
   try {
+    const userId = req.user.id;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [interactedPostIds, allPosts] = await Promise.all([
+      getUserInteractions(userId, { includeOwn: false }), 
+      getPostFromCache(),
+    ]);
+
+    // A Set makes each lookup O(1); includes() on an array is O(n) per post
+    const interacted = new Set(interactedPostIds.map(String));
+    const newestFirst = (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
+
+    // filter() returns new arrays, so sorting them never reorders the shared cache
+    const fresh = allPosts
+      .filter((p) => !interacted.has(p._id.toString()))
+      .sort(newestFirst);
+    const seen = allPosts
+      .filter((p) => interacted.has(p._id.toString()))
+      .sort(newestFirst);
+
+    // Untouched posts first, already-seen posts fill in after
+    const feed = [...fresh, ...seen];
+
+    const posts = feed.slice(skip, skip + limit);
+    const totalPosts = feed.length;
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: {
+        posts, // ← was allAvailablePosts
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalPosts / limit),
+          totalPosts,
+          hasMore: skip + posts.length < totalPosts,
+          postsPerPage: limit,
+          freshCount: fresh.length, // optional, see below
+        },
+      },
+      message: "Newsfeed posts fetched successfully",
+    });
   } catch (error) {
-    return next(new ErrorHandler(error.message, StatusCodes.BAD_REQUEST));
+    return next(
+      new ErrorHandler(error.message, StatusCodes.INTERNAL_SERVER_ERROR)
+    );
   }
 };
 

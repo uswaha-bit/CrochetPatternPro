@@ -8,14 +8,26 @@ import styled from "styled-components";
 import SubMenuBar from "./SubMenuBar";
 import Spinner from "../../ui/Spinner";
 import { useGetPatternById } from "../../hooks/usePattern";
-import { setStitches, setLinks, setPatternName, setId, resetEditor } from "./editorSlice";
+import {
+  setStitches,
+  setLinks,
+  setPatternName,
+  setId,
+  resetEditor,
+} from "./editorSlice";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { colors, fontStack } from "../../ui/theme";
 
+// min-height (not height): the canvas heights are set in vh, so the page
+// background only needs to cover whatever is left over
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 95vh;
+  min-height: 100vh;
+  background: ${colors.paper};
+  color: ${colors.ink};
+  font-family: ${fontStack};
 `;
 
 export default function Index() {
@@ -24,7 +36,7 @@ export default function Index() {
   const expanded = useSelector((state) => state.editor.expanded);
   const view3D = useSelector((state) => state.editor.view3D);
   const user = useSelector((store) => store.user);
-  const { name, _id } = user.userDetail;
+  const _id = user.userDetail?._id;
 
   const navItemsForLggedIn = [
     { label: "Learn", path: "/learn" },
@@ -47,11 +59,10 @@ export default function Index() {
       dispatch(setStitches(pattern.stitches || []));
       dispatch(setLinks(pattern.links || []));
       dispatch(setPatternName(pattern.name));
-      dispatch(setId(pattern._id))
+      dispatch(setId(pattern._id));
       setIsInitializing(false);
-    }
-    else{
-      dispatch(resetEditor())
+    } else {
+      dispatch(resetEditor());
     }
   }, [id, pattern, dispatch]);
 

@@ -8,37 +8,75 @@ import HalfDoubleCrochet from "../../assets/halfDouble.svg?react";
 import TrebleCrochet from "../../assets/treble.svg?react";
 
 import { useDispatch, useSelector } from "react-redux";
-import { addStitch, selectStitch } from "./editorSlice";
+import { selectStitch } from "./editorSlice";
+import { colors } from "../../ui/theme";
 
-const Stitchesbar = styled.div`
+const STITCHES = [
+  { id: "ch", label: "Chain", Icon: ChainStitch },
+  { id: "slip", label: "Slip stitch", Icon: SlipStitch },
+  { id: "sc", label: "Single crochet", Icon: SingleCrochet },
+  { id: "hdc", label: "Half double crochet", Icon: HalfDoubleCrochet },
+  { id: "dc", label: "Double crochet", Icon: DoubleCrochet },
+  { id: "tr", label: "Treble crochet", Icon: TrebleCrochet },
+];
+
+/* A stitched panel holding the symbols */
+const Palette = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 10px;
+  align-self: flex-start;
+  box-sizing: border-box;
+  max-height: 75vh;
+  margin: 10px 0 0 20px;
+  padding: 10px;
+  overflow-y: auto;
+  border: 2px dashed ${colors.stitchLine};
+  border-radius: 16px;
+  background: ${colors.surface};
 `;
 
-const StitchContainer = styled.div`
+const StitchButton = styled.button`
+  position: relative;
+  flex: none;
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 50px;
-  background-color: ${(props) => (props.selected ? "var(--secondary-color)" : "var(--primary-color)")};
-  width: fit-content;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: 2px solid ${colors.ink};
+  border-radius: 12px;
+  background: ${({ $selected }) => ($selected ? colors.yarn : colors.surface)};
+  box-shadow: ${({ $selected }) =>
+    $selected ? `0 3px 0 ${colors.ink}` : "none"};
+  color: ${colors.ink};
   cursor: pointer;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  &:hover {
-    background-color: var(--secondary-color);
+
+  /* dashed seam on the selected stitch, like the patch button */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border: 2px dashed rgba(22, 48, 32, 0.5);
+    border-radius: 7px;
+    opacity: ${({ $selected }) => ($selected ? 1 : 0)};
+    pointer-events: none;
   }
-`;
 
-const StitchSymbolWrapper = styled.div`
-  width: 50px;
-  height: 50px;
-  color: ${(props) => props.color || "#171516"};
+  &:hover {
+    background: ${({ $selected }) =>
+      $selected ? colors.yarn : "rgba(22, 48, 32, 0.08)"};
+  }
 
-  & > svg {
-    width: 100%;
-    height: 100%;
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 36px;
+    height: 36px;
     fill: currentColor;
     stroke: currentColor;
     stroke-width: 20;
@@ -52,49 +90,26 @@ export default function StitchesBar() {
   const handleSelect = (stitch) => {
     if (selectedStitch !== stitch) {
       dispatch(selectStitch({ stitch }));
-    }
-    else{
-      dispatch(selectStitch({stitch:null}))
+    } else {
+      dispatch(selectStitch({ stitch: null }));
     }
   };
 
   return (
-    <Stitchesbar>
-      <StitchContainer selected={selectedStitch === "ch"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("ch")} color="black">
-          <ChainStitch />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-
-      <StitchContainer selected={selectedStitch === "slip"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("slip")} color="black">
-          <SlipStitch />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-
-      <StitchContainer selected={selectedStitch === "sc"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("sc")} color="black">
-          <SingleCrochet />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-
-      <StitchContainer selected={selectedStitch === "hdc"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("hdc")} color="black">
-          <HalfDoubleCrochet />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-
-      <StitchContainer selected={selectedStitch === "dc"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("dc")} color="black">
-          <DoubleCrochet />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-
-      <StitchContainer selected={selectedStitch === "tr"}>
-        <StitchSymbolWrapper onClick={() => handleSelect("tr")} color="black">
-          <TrebleCrochet />
-        </StitchSymbolWrapper>
-      </StitchContainer>
-    </Stitchesbar>
+    <Palette role="toolbar" aria-label="Stitches" aria-orientation="vertical">
+      {STITCHES.map(({ id, label, Icon }) => (
+        <StitchButton
+          key={id}
+          type="button"
+          $selected={selectedStitch === id}
+          aria-pressed={selectedStitch === id}
+          aria-label={label}
+          title={label}
+          onClick={() => handleSelect(id)}
+        >
+          <Icon />
+        </StitchButton>
+      ))}
+    </Palette>
   );
 }

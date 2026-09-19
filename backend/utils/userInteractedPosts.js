@@ -200,11 +200,10 @@ const getUserInteractionsFromCache = async (userId) => {
   }
 };
 
-//generating user interctions
-export const getUserInteractions = async (userId) => {
+export const getUserInteractions = async (userId, { includeOwn = true } = {}) => {
   try {
     const [ownPosts, savedPosts, interactions] = await Promise.all([
-      getUserOwnPostsFromCache(userId),
+      includeOwn ? getUserOwnPostsFromCache(userId) : [],
       getUserSavedPostsFromCache(userId),
       getUserInteractionsFromCache(userId),
     ]);
@@ -216,13 +215,11 @@ export const getUserInteractions = async (userId) => {
       ...interactions.shared,
       ...interactions.commented,
     ];
-    // console.log(allInteractedPosts);
     return [...new Set(allInteractedPosts)];
   } catch (error) {
     throw new Error("error fetching user interacted posts: " + error.message);
   }
 };
-
 export const addPostToCache = async (post) => {
   try {
     const allPosts = await getPostFromCache();

@@ -1,4 +1,12 @@
-import styled from "styled-components";
+   import { colors } from "../../ui/theme";
+   import {
+     Container,
+     CanvasContainer,
+     ExportButton,
+     ExpandButton,
+     ZoomButtonsContainer,
+     ZoomButton,
+   } from "./EditorStyles";
 import StitchesBar from "./StitchesBar";
 import {
   FaPlus,
@@ -18,83 +26,6 @@ import stitchDistances from "../utils/stitchDistances";
 import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 const stitchCanvas = new CrochetCanvas();
-
-const Container = styled.div`
-  display: flex;
-  position: relative;
-`;
-
-const ExportButton = styled.div`
-  cursor: pointer;
-  position: absolute;
-  border-radius: 30px;
-  background-color: var(--secondary-color);
-  bottom: 85px;
-  right: 40px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  z-index: 99;
-  &:hover {
-    background-color: var(--primary-color);
-  }
-`;
-
-const CanvasContainer = styled.div`
-  width: 100%;
-  background-color: var(--third-color);
-  margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px")};
-  height: ${({ $expanded, $selectedMenu }) =>
-    $expanded ? "100%" : $selectedMenu ? "65vh" : "75vh"};
-  border-radius: 30px;
-  overflow: hidden;
-  box-sizing: border-box;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-`;
-
-const ExpandButton = styled.div`
-  cursor: pointer;
-  position: absolute;
-  border-radius: 30px;
-  background-color: var(--secondary-color);
-  bottom: 35px;
-  right: 40px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  z-index: 99;
-  &:hover {
-    background-color: var(--primary-color);
-  }
-`;
-
-const ZoomButtonsContainer = styled.div`
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-  top: 28px;
-  right: 40px;
-`;
-
-const ZoomButton = styled.div`
-  cursor: pointer;
-  padding: 10px;
-  background-color: var(--secondary-color);
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  &:hover {
-    background-color: var(--primary-color);
-  }
-`;
 
 export default function Canvas2D() {
   const isEmpty =
@@ -187,9 +118,7 @@ export default function Canvas2D() {
         const html2canvas = (await import("html2canvas")).default;
 
         const canvas = await html2canvas(containerRef.current, {
-          backgroundColor: getComputedStyle(document.documentElement)
-            .getPropertyValue("--third-color")
-            .trim(),
+          backgroundColor: colors.surface,
           scale: 2, // Higher quality
           useCORS: true,
           allowTaint: true,
@@ -214,11 +143,7 @@ export default function Canvas2D() {
     if (!containerRef.current) return;
 
     const graph = ForceGraph2D()(containerRef.current)
-      .backgroundColor(
-        getComputedStyle(document.documentElement)
-          .getPropertyValue("--third-color")
-          .trim()
-      )
+      .backgroundColor(colors.surface)
       .nodeRelSize(5)
       .nodeColor(() => "transparent")
       .linkColor(() => "#ccc")
@@ -240,8 +165,8 @@ export default function Canvas2D() {
             node.y,
             radius
           );
-          gradient.addColorStop(0, "rgba(234, 142, 75, 0.8)");
-          gradient.addColorStop(1, "rgba(234, 142, 75, 0)");
+          gradient.addColorStop(0, "rgba(242, 179, 61, 0.85)");
+          gradient.addColorStop(1, "rgba(242, 179, 61, 0)");
           ctx.fillStyle = gradient;
           ctx.beginPath();
           ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
@@ -375,17 +300,22 @@ export default function Canvas2D() {
           ref={containerRef}
         />
         <ZoomButtonsContainer>
-          <ZoomButton onClick={() => handleZoom(true)}>
+          <ZoomButton type="button" aria-label="Zoom in" onClick={() => handleZoom(true)}>
             <FaPlus size={12} />
           </ZoomButton>
-          <ZoomButton onClick={() => handleZoom(false)}>
+          <ZoomButton type="button" aria-label="Zoom out" onClick={() => handleZoom(false)}>
             <FaMinus size={12} />
           </ZoomButton>
         </ZoomButtonsContainer>
-        <ExportButton onClick={exportCanvasAsPNG}>
+        <ExportButton type="button" aria-label="Download as PNG" title="Download as PNG" onClick={exportCanvasAsPNG}>
           <FaDownload size={16} />
         </ExportButton>
-        <ExpandButton onClick={() => dispatch(toggleExpandCanvas())}>
+        <ExpandButton
+          type="button"
+          aria-label={expanded ? "Exit expanded view" : "Expand canvas"}
+          title={expanded ? "Exit expanded view" : "Expand canvas"}
+          onClick={() => dispatch(toggleExpandCanvas())}
+        >
           {expanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
         </ExpandButton>
       </Container>

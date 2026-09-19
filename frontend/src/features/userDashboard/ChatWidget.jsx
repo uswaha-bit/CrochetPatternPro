@@ -1,186 +1,283 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import styled, { keyframes } from "styled-components";
+import { FaCommentDots } from "react-icons/fa";
 import { io } from "socket.io-client";
 import { URL } from "../../config";
-// Styled Components
-const ChatContainer = ({ isOpen = false, children, ...props }) => (
-  <div
-    {...props}
-    style={{
-      position: "fixed",
-      bottom: "20px",
-      right: "20px",
-      width: isOpen ? "350px" : "60px",
-      height: isOpen ? "500px" : "60px",
-      backgroundColor: "#fff",
-      borderRadius: "10px",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-      transition: "all 0.3s ease",
-      zIndex: 1000,
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden",
-    }}
-  >
-    {children}
-  </div>
-);
+import { colors, fontStack, patchButton } from "../../ui/theme";
 
-const ChatToggle = ({ onClick, isOpen, unreadCount = 0 }) => (
-  <button
-    onClick={onClick}
-    style={{
-      width: "60px",
-      height: "60px",
-      borderRadius: "50%",
-      backgroundColor: "#007bff",
-      border: "none",
-      color: "white",
-      fontSize: "24px",
-      cursor: "pointer",
-      position: "absolute",
-      bottom: isOpen ? "10px" : "0",
-      right: isOpen ? "10px" : "0",
-      transition: "all 0.3s ease",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-    }}
-  >
-    {isOpen ? "×" : "💬"}
-    {unreadCount > 0 && !isOpen && (
-      <span
-        style={{
-          position: "absolute",
-          top: "-5px",
-          right: "-5px",
-          backgroundColor: "#ff4444",
-          color: "white",
-          borderRadius: "50%",
-          width: "20px",
-          height: "20px",
-          fontSize: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {unreadCount > 9 ? "9+" : unreadCount}
-      </span>
-    )}
-  </button>
-);
+/* ---------- Launcher (closed state) ---------- */
+const Launcher = styled.button`
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 2px solid ${colors.ink};
+  border-radius: 50%;
+  background: ${colors.yarn};
+  color: ${colors.ink};
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 ${colors.ink};
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-const ChatHeader = () => (
-  <div
-    style={{
-      padding: "15px",
-      backgroundColor: "#007bff",
-      color: "white",
-      fontWeight: "bold",
-      borderRadius: "10px 10px 0 0",
-    }}
-  >
-    Chat Support
-  </div>
-);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 ${colors.ink};
+  }
 
-const MessagesContainer = ({ children }) => (
-  <div
-    style={{
-      flex: 1,
-      padding: "10px",
-      overflowY: "auto",
-      backgroundColor: "#f8f9fa",
-    }}
-  >
-    {children}
-  </div>
-);
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 ${colors.ink};
+  }
 
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+const UnreadBadge = styled.span`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 2px solid ${colors.ink};
+  border-radius: 12px;
+  background: ${colors.error};
+  color: ${colors.surface};
+  font-family: ${fontStack};
+  font-size: 12px;
+  font-weight: 700;
+`;
+
+/* ---------- Panel (open state): the stitched swatch again ---------- */
+const Panel = styled.div`
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: min(350px, calc(100vw - 32px));
+  height: min(500px, calc(100dvh - 40px));
+  border: 2px solid ${colors.ink};
+  border-radius: 20px;
+  background: ${colors.surface};
+  color: ${colors.ink};
+  font-family: ${fontStack};
+  box-shadow: 0 6px 0 ${colors.ink};
+`;
+
+const HeaderBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 12px 18px;
+  border-bottom: 2px dashed ${colors.stitchLine};
+`;
+
+const HeaderTitle = styled.h2`
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+`;
+
+const CloseButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid ${colors.ink};
+  border-radius: 10px;
+  background: transparent;
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: ${colors.ink};
+    color: ${colors.paper};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+const MessagesArea = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 16px;
+  background: ${colors.paper};
+`;
+
+const EmptyText = styled.p`
+  margin: auto;
+  max-width: 24ch;
+  color: ${colors.muted};
+  text-align: center;
+  line-height: 1.5;
+`;
+
+const MessageRow = styled.div`
+  display: flex;
+  justify-content: ${({ $own }) => ($own ? "flex-end" : "flex-start")};
+`;
+
+const Bubble = styled.div`
+  box-sizing: border-box;
+  max-width: 75%;
+  padding: 8px 12px;
+  border: 2px solid ${colors.ink};
+  border-radius: ${({ $own }) =>
+    $own ? "14px 4px 14px 14px" : "4px 14px 14px 14px"};
+  background: ${({ $own }) => ($own ? colors.yarn : colors.surface)};
+  color: ${colors.ink};
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+`;
+
+const Time = styled.div`
+  margin-top: 4px;
+  font-size: 0.72rem;
+  opacity: 0.7;
+`;
+
+const bounce = keyframes`
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+`;
+
+const Dots = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: ${colors.muted};
+`;
+
+const Dot = styled.span`
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: ${colors.ink};
+  animation: ${bounce} 1.4s infinite ease-in-out;
+  animation-delay: ${({ $i }) => $i * 0.16}s;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+const InputRow = styled.div`
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 2px dashed ${colors.stitchLine};
+`;
+
+const TextInput = styled.input`
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 2px solid ${colors.ink};
+  border-radius: 12px;
+  background: ${colors.surface};
+  color: ${colors.ink};
+  font: inherit;
+  font-size: 0.95rem;
+
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${colors.leaf};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+`;
+
+const SendButton = styled.button`
+  ${patchButton}
+  flex: none;
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.95rem;
+`;
+
+const Banner = styled.div`
+  padding: 8px;
+  border-top: 2px solid ${colors.ink};
+  background: ${colors.yarn};
+  color: ${colors.ink};
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+`;
+
+/* ---------- Pieces ---------- */
 const Message = ({ message, isOwn = false, timestamp }) => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: isOwn ? "flex-end" : "flex-start",
-      marginBottom: "10px",
-    }}
-  >
-    <div
-      style={{
-        maxWidth: "70%",
-        padding: "8px 12px",
-        borderRadius: "15px",
-        backgroundColor: isOwn ? "#007bff" : "#e9ecef",
-        color: isOwn ? "white" : "#333",
-      }}
-    >
+  <MessageRow $own={isOwn}>
+    <Bubble $own={isOwn}>
       <div>{message}</div>
       {timestamp && (
-        <div
-          style={{
-            fontSize: "11px",
-            opacity: 0.7,
-            marginTop: "4px",
-          }}
-        >
+        <Time>
           {new Date(timestamp).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           })}
-        </div>
+        </Time>
       )}
-    </div>
-  </div>
+    </Bubble>
+  </MessageRow>
 );
 
 const TypingIndicator = () => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "flex-start",
-      marginBottom: "10px",
-    }}
-  >
-    <div
-      style={{
-        padding: "8px 12px",
-        borderRadius: "15px",
-        backgroundColor: "#e9ecef",
-        color: "#666",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-        }}
-      >
+  <MessageRow>
+    <Bubble aria-label="Typing">
+      <Dots>
         <span>Typing</span>
-        <div
-          style={{
-            display: "flex",
-            gap: "2px",
-          }}
-        >
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                width: "4px",
-                height: "4px",
-                borderRadius: "50%",
-                backgroundColor: "#666",
-                animation: `bounce 1.4s infinite ease-in-out`,
-                animationDelay: `${i * 0.16}s`,
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
+        {[1, 2, 3].map((i) => (
+          <Dot key={i} $i={i} />
+        ))}
+      </Dots>
+    </Bubble>
+  </MessageRow>
 );
 
 const ChatInput = ({ onSendMessage, disabled = false }) => {
@@ -195,7 +292,7 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -218,47 +315,24 @@ const ChatInput = ({ onSendMessage, disabled = false }) => {
   };
 
   return (
-    <div
-      style={{
-        padding: "10px",
-        borderTop: "1px solid #ddd",
-        display: "flex",
-        gap: "8px",
-      }}
-    >
-      <input
+    <InputRow>
+      <TextInput
         type="text"
         value={message}
         onChange={(e) => handleTyping(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         placeholder="Type a message..."
+        aria-label="Message"
         disabled={disabled}
-        style={{
-          flex: 1,
-          padding: "8px 12px",
-          border: "1px solid #ddd",
-          borderRadius: "20px",
-          outline: "none",
-          fontSize: "14px",
-        }}
       />
-      <button
+      <SendButton
+        type="button"
         onClick={handleSubmit}
         disabled={disabled || !message.trim()}
-        style={{
-          padding: "8px 16px",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "20px",
-          cursor: "pointer",
-          fontSize: "14px",
-          opacity: disabled || !message.trim() ? 0.5 : 1,
-        }}
       >
         Send
-      </button>
-    </div>
+      </SendButton>
+    </InputRow>
   );
 };
 
@@ -388,76 +462,55 @@ export const ChatWidget = ({ userId, chatId }) => {
     setIsOpen(!isOpen);
   };
 
-  // Add CSS animation for typing dots
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes bounce {
-        0%, 80%, 100% {
-          transform: scale(0);
+  if (!isOpen) {
+    return (
+      <Launcher
+        type="button"
+        onClick={toggleChat}
+        aria-label={
+          unreadCount > 0
+            ? `Open chat, ${unreadCount} unread messages`
+            : "Open chat"
         }
-        40% {
-          transform: scale(1);
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
+      >
+        <FaCommentDots />
+        {unreadCount > 0 && (
+          <UnreadBadge aria-hidden="true">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </UnreadBadge>
+        )}
+      </Launcher>
+    );
+  }
 
   return (
-    <ChatContainer isOpen={isOpen}>
-      {isOpen && (
-        <>
-          <ChatHeader />
-          <MessagesContainer>
-            {messages.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  color: "#666",
-                  marginTop: "20px",
-                }}
-              >
-                No messages yet. Start a conversation!
-              </div>
-            ) : (
-              messages.map((msg) => (
-                <Message
-                  key={msg.id}
-                  message={msg.content}
-                  isOwn={msg.isOwn}
-                  timestamp={msg.timestamp}
-                />
-              ))
-            )}
-            {isTyping && <TypingIndicator />}
-            <div ref={messagesEndRef} />
-          </MessagesContainer>
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            disabled={!isConnected}
-          />
-          {!isConnected && (
-            <div
-              style={{
-                padding: "8px",
-                backgroundColor: "#ffc107",
-                color: "#856404",
-                textAlign: "center",
-                fontSize: "12px",
-              }}
-            >
-              Connecting...
-            </div>
-          )}
-        </>
-      )}
-      <ChatToggle
-        onClick={toggleChat}
-        isOpen={isOpen}
-        unreadCount={unreadCount}
-      />
-    </ChatContainer>
+    <Panel role="dialog" aria-label="Chat support">
+      <HeaderBar>
+        <HeaderTitle>Chat support</HeaderTitle>
+        <CloseButton type="button" aria-label="Close chat" onClick={toggleChat}>
+          ×
+        </CloseButton>
+      </HeaderBar>
+
+      <MessagesArea role="log" aria-live="polite">
+        {messages.length === 0 ? (
+          <EmptyText>No messages yet. Start a conversation!</EmptyText>
+        ) : (
+          messages.map((msg) => (
+            <Message
+              key={msg.id}
+              message={msg.content}
+              isOwn={msg.isOwn}
+              timestamp={msg.timestamp}
+            />
+          ))
+        )}
+        {isTyping && <TypingIndicator />}
+        <div ref={messagesEndRef} />
+      </MessagesArea>
+
+      <ChatInput onSendMessage={handleSendMessage} disabled={!isConnected} />
+      {!isConnected && <Banner>Connecting...</Banner>}
+    </Panel>
   );
 };

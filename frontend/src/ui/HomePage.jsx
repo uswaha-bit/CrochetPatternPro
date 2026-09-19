@@ -29,7 +29,7 @@ const STAGES = [
     imgClass: styles.wide,
   },
   {
-    title: "Stitch it",
+    title: "Crochet it",
     text: "Pick up your hook and make it real.",
     src: "/crocheted-leaf.png",
     alt: "A finished crocheted leaf",
