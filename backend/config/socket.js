@@ -10,7 +10,7 @@ const configureSocket = (server) => {
     cors: {
       origin: [
         "http://localhost:5173",
-        "https://crochetpatternpro.onrender.com"
+        "https://crochetpatternpro-1.onrender.com"
       ],
       credentials: true,
       methods: ["GET", "POST"],
