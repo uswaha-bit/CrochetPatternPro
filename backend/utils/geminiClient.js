@@ -11,11 +11,12 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
+const MODEL_NAME ="gemini-3.6-flash";
 
 // Function to get a concise response from Gemini
 export const getConciseGeminiResponse = async (promptText) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Use gemini-2.5-flash for efficiency
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
     // IMPORTANT: Engineering the prompt for a shorter reply
     const concisePrompt = `Please provide a very short and concise answer (max 2-3 sentences or a brief bullet list if applicable) to the following: "${promptText}"`;
@@ -32,7 +33,7 @@ export const getConciseGeminiResponse = async (promptText) => {
 
 export const getGeminiChatResponse = async (chatHistory, newMessage) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
     // Static system prompt for context awareness
     const systemPrompt = {
