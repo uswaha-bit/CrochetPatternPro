@@ -22,7 +22,13 @@ body {
     background-color: var(--third-color);
   }
   
-
+   html,
+   body,
+   button,
+   select,
+   summary {
+     cursor: url("/cursor-arrow.svg") 0 0, default;
+   }
 input:-webkit-autofill ~ label,
 input:not(:placeholder-shown) ~ label,
 input:focus ~ label {
