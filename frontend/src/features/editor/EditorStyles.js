@@ -3,24 +3,33 @@ import { colors } from "../../ui/theme";
 
 export const Container = styled.div`
   display: flex;
+  flex-direction: row;
   position: relative;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
-/* The drawing surface, framed like the other stitched swatches.
-   Heights are unchanged from before, so the graph sizing behaves the same. */
 export const CanvasContainer = styled.div`
-  width: 100%;
+  flex: 1;
+  min-width: 0; /* prevents flex overflow, the actual bug */
   box-sizing: border-box;
   margin: ${({ $expanded }) => ($expanded ? "0px" : "10px 20px 16px")};
   height: ${({ $expanded, $selectedMenu }) =>
-    $expanded ? "100%" : $selectedMenu ? "65vh" : "75vh"};
+    $expanded ? "100%" : $selectedMenu ? "65dvh" : "75dvh"};
   overflow: hidden;
-  border: ${({ $expanded }) =>
-    $expanded ? "0" : `2px solid ${colors.ink}`};
+  border: ${({ $expanded }) => ($expanded ? "0" : `2px solid ${colors.ink}`)};
   border-radius: ${({ $expanded }) => ($expanded ? "0" : "16px")};
   background: ${colors.surface};
-  box-shadow: ${({ $expanded }) =>
-    $expanded ? "none" : `0 6px 0 ${colors.ink}`};
+  box-shadow: ${({ $expanded }) => ($expanded ? "none" : `0 6px 0 ${colors.ink}`)};
+
+  @media (max-width: 480px) {
+    margin: 8px 10px 12px;
+    height: ${({ $expanded, $selectedMenu }) =>
+      $expanded ? "100%" : $selectedMenu ? "55dvh" : "60dvh"};
+  }
 `;
 
 /* ---------- Floating controls ---------- */
@@ -40,8 +49,7 @@ const floating = css`
   color: ${colors.ink};
   cursor: pointer;
   box-shadow: 0 3px 0 ${colors.ink};
-  transition: transform 0.15s ease, box-shadow 0.15s ease,
-    background-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 
   &:hover {
     background: ${colors.yarn};
@@ -59,6 +67,12 @@ const floating = css`
     outline-offset: 3px;
   }
 
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    right: 16px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
@@ -67,14 +81,21 @@ const floating = css`
 export const ExportButton = styled.button`
   ${floating}
   bottom: 85px;
+
+  @media (max-width: 480px) {
+    bottom: 70px;
+  }
 `;
 
 export const ExpandButton = styled.button`
   ${floating}
   bottom: 35px;
+
+  @media (max-width: 480px) {
+    bottom: 24px;
+  }
 `;
 
-/* Zoom in / zoom out as one joined control */
 export const ZoomButtonsContainer = styled.div`
   position: absolute;
   top: 28px;
@@ -87,6 +108,11 @@ export const ZoomButtonsContainer = styled.div`
   border-radius: 12px;
   background: ${colors.surface};
   box-shadow: 0 3px 0 ${colors.ink};
+
+  @media (max-width: 480px) {
+    top: 16px;
+    right: 16px;
+  }
 `;
 
 export const ZoomButton = styled.button`
@@ -112,5 +138,10 @@ export const ZoomButton = styled.button`
   &:focus-visible {
     outline: 3px solid ${colors.leaf};
     outline-offset: -3px;
+  }
+
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
   }
 `;

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-
+import { useMediaQuery } from "react-responsive"; 
 import SlipStitch from "../../assets/slip.svg?react";
 import ChainStitch from "../../assets/chain.svg?react";
 import SingleCrochet from "../../assets/singleCrochet.svg?react";
@@ -27,13 +27,24 @@ const Palette = styled.div`
   gap: 10px;
   align-self: flex-start;
   box-sizing: border-box;
-  max-height: 75vh;
+  max-height: 75dvh;
   margin: 10px 0 0 20px;
   padding: 10px;
   overflow-y: auto;
   border: 2px dashed ${colors.stitchLine};
   border-radius: 16px;
   background: ${colors.surface};
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    align-self: stretch;
+    max-height: none;
+    max-width: 100%;
+    margin: 10px 10px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
 const StitchButton = styled.button`
@@ -48,12 +59,10 @@ const StitchButton = styled.button`
   border: 2px solid ${colors.ink};
   border-radius: 12px;
   background: ${({ $selected }) => ($selected ? colors.yarn : colors.surface)};
-  box-shadow: ${({ $selected }) =>
-    $selected ? `0 3px 0 ${colors.ink}` : "none"};
+  box-shadow: ${({ $selected }) => ($selected ? `0 3px 0 ${colors.ink}` : "none")};
   color: ${colors.ink};
   cursor: pointer;
 
-  /* dashed seam on the selected stitch, like the patch button */
   &::after {
     content: "";
     position: absolute;
@@ -65,8 +74,7 @@ const StitchButton = styled.button`
   }
 
   &:hover {
-    background: ${({ $selected }) =>
-      $selected ? colors.yarn : "rgba(22, 48, 32, 0.08)"};
+    background: ${({ $selected }) => ($selected ? colors.yarn : "rgba(22, 48, 32, 0.08)")};
   }
 
   &:focus-visible {
@@ -81,10 +89,20 @@ const StitchButton = styled.button`
     stroke: currentColor;
     stroke-width: 20;
   }
-`;
 
+  @media (max-width: 480px) {
+    width: 48px;
+    height: 48px;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+`;
 export default function StitchesBar() {
   const dispatch = useDispatch();
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const selectedStitch = useSelector((state) => state.editor.selectedStitch);
 
   const handleSelect = (stitch) => {
@@ -96,7 +114,7 @@ export default function StitchesBar() {
   };
 
   return (
-    <Palette role="toolbar" aria-label="Stitches" aria-orientation="vertical">
+    <Palette role="toolbar" aria-label="Stitches" aria-orientation={isMobile ? "horizontal" : "vertical"}>
       {STITCHES.map(({ id, label, Icon }) => (
         <StitchButton
           key={id}
