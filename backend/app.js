@@ -12,7 +12,7 @@ import askAIRoute from "./routes/askAIRoute.js";
 import { initializePostCache } from "./utils/userInteractedPosts.js";
 import http from "http";
 const app = express();
-
+app.set("trust proxy", 1); 
 const httpServer = http.createServer(app);
 const io = configureSocket(httpServer);
 

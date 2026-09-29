@@ -5,12 +5,13 @@ const sendToken = (user, statusCode, res) => {
   const expiresAt = new Date(
     Date.now() + config.jwt.cookieExpiresDays * 24 * 60 * 60 * 1000
   );
+  const isProd = process.env.NODE_ENV === "production";
 
   const options = {
     expires: expiresAt,
     httpOnly: true,
-    secure: false, // true in production
-    sameSite: "lax", // 'none' in production with HTTPS
+    secure: isProd,                 
+    sameSite: isProd ? "none" : "lax", 
     path: "/",
   };
 
